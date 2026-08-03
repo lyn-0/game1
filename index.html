@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>あそんで どうが</title>
+<style>
+  :root{
+    --bg1:#fff3d6; --bg2:#d8f2ff;
+    --ink:#3b3226;
+    --pop:#ff8a3d; --pop2:#ffd23d;
+    --blue:#4fc3f7; --green:#7ed957; --pink:#ff8fb1; --purple:#b388ff;
+    --card:#ffffff;
+    --shadow:0 6px 0 rgba(0,0,0,.15);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN",-apple-system,"Yu Gothic UI","Meiryo",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    overflow-x:hidden;
+  }
+  button{font-family:inherit; cursor:pointer; border:none;}
+  .screen{display:none; min-height:100vh; padding:16px 16px 40px; max-width:900px; margin:0 auto;}
+  .screen.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  /* ---------- 共通パーツ ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px;}
+  .ticket{
+    background:#fff; border-radius:999px; padding:8px 16px; font-size:20px; font-weight:bold;
+    box-shadow:var(--shadow); display:flex; align-items:center; gap:6px;
+  }
+  .icon-btn{
+    background:#fff; border-radius:999px; width:52px; height:52px; font-size:24px;
+    box-shadow:var(--shadow); display:grid; place-items:center;
+  }
+  .icon-btn:active,.big-btn:active,.game-card:active,.genre-card:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.15);}
+  .big-btn{
+    display:block; width:100%; padding:18px; font-size:24px; font-weight:bold; color:#fff;
+    background:var(--pop); border-radius:20px; box-shadow:var(--shadow); margin-top:14px;
+  }
+  .big-btn.sub{background:#9aa7b0;}
+  .big-btn.go{background:var(--green);}
+  h1{font-size:30px; text-align:center; margin:6px 0 4px;}
+  h2{font-size:24px; text-align:center; margin:4px 0 14px;}
+  .hint{text-align:center; font-size:15px; color:#7a6f60; margin:0 0 12px;}
+
+  /* ---------- ホーム ---------- */
+  .game-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:10px;}
+  .game-card{
+    background:var(--card); border-radius:24px; padding:18px 10px; text-align:center;
+    box-shadow:var(--shadow); font-size:19px; font-weight:bold; line-height:1.4;
+  }
+  .game-card .emo{display:block; font-size:52px; margin-bottom:6px;}
+  .game-card.c1{background:#fff0f4;} .game-card.c2{background:#eefbe8;}
+  .game-card.c3{background:#eaf6ff;} .game-card.c4{background:#f4eeff;}
+
+  /* ---------- ゲーム共通 ---------- */
+  .stage{background:rgba(255,255,255,.65); border-radius:24px; padding:16px; margin-top:8px;}
+  .status{display:flex; justify-content:center; gap:14px; font-size:19px; font-weight:bold; margin-bottom:10px; flex-wrap:wrap;}
+  .status span{background:#fff; padding:6px 14px; border-radius:999px;}
+
+  /* 神経衰弱 */
+  #memGrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:420px; margin:0 auto;}
+  .mcard{aspect-ratio:1/1; border-radius:16px; background:var(--blue); font-size:min(11vw,44px);
+    display:grid; place-items:center; box-shadow:var(--shadow); color:transparent;}
+  .mcard.open{background:#fff; color:inherit;}
+  .mcard.done{background:#e6ffe1; color:inherit; opacity:.55;}
+
+  /* 計算・かたち */
+  .question{font-size:56px; text-align:center; font-weight:bold; margin:14px 0 18px;}
+  .choices{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; max-width:460px; margin:0 auto;}
+  .choice{
+    background:#fff; border-radius:20px; padding:22px 8px; font-size:38px; font-weight:bold;
+    box-shadow:var(--shadow);
+  }
+  .choice:active{transform:translateY(3px);}
+  .choice.wrong{animation:shake .35s; background:#ffe0e0;}
+  .choice.right{background:#d9ffd0;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+  .shape{width:78px; height:78px; margin:0 auto; display:block;}
+
+  /* もぐら */
+  #moleGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:420px; margin:0 auto;}
+  .hole{aspect-ratio:1/1; border-radius:50%; background:#c9a227; box-shadow:inset 0 8px 0 rgba(0,0,0,.18);
+    display:grid; place-items:center; font-size:min(13vw,52px); overflow:hidden;}
+  .hole .m{transform:translateY(120%); transition:transform .12s;}
+  .hole.up .m{transform:translateY(0);}
+  .hole.hit .m{transform:translateY(0) scale(.7); filter:saturate(.4);}
+
+  /* ---------- ごほうび ---------- */
+  .reward-hero{font-size:80px; text-align:center; animation:pop .5s;}
+  @keyframes pop{from{transform:scale(.3) rotate(-20deg); opacity:0}to{transform:none;opacity:1}}
+  .genre-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:12px;}
+  .genre-card{background:#fff; border-radius:20px; padding:18px 10px; text-align:center; font-size:19px;
+    font-weight:bold; box-shadow:var(--shadow);}
+  .genre-card .emo{display:block; font-size:40px;}
+
+  /* ---------- 動画 ---------- */
+  .vid-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;}
+  .vid{background:#fff; border-radius:16px; overflow:hidden; box-shadow:var(--shadow); text-align:left; padding:0;}
+  .vid img{width:100%; display:block; aspect-ratio:16/9; object-fit:cover;}
+  .vid .t{padding:8px 10px 10px; font-size:14px; line-height:1.35; font-weight:bold;}
+  .player-wrap{position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:18px; overflow:hidden;}
+  .player-wrap iframe{width:100%; height:100%; border:0;}
+  .msg{background:#fff; border-radius:18px; padding:18px; font-size:16px; line-height:1.7; margin-top:10px;}
+  .spinner{text-align:center; font-size:40px; padding:30px; animation:spin 1.2s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- 設定 ---------- */
+  .panel{background:#fff; border-radius:20px; padding:16px; margin-bottom:14px; box-shadow:0 3px 10px rgba(0,0,0,.07);}
+  .panel h3{margin:0 0 10px; font-size:18px;}
+  .row{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px dashed #e6e0d5;}
+  .row:last-child{border-bottom:none;}
+  .row .g-emo{font-size:26px;}
+  .row .g-name{flex:1; font-weight:bold; font-size:17px;}
+  .row .g-q{font-size:12px; color:#8b8073;}
+  .del{background:#ffe3e3; color:#c0392b; border-radius:10px; padding:8px 12px; font-size:14px; font-weight:bold;}
+  input[type=text],input[type=password]{
+    width:100%; padding:11px 12px; font-size:16px; border:2px solid #e2dbcf; border-radius:12px;
+    font-family:inherit; margin-bottom:8px;
+  }
+  .emo-pick{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .emo-pick button{font-size:24px; background:#f4f0e8; border-radius:10px; padding:5px 8px;}
+  .emo-pick button.sel{background:var(--pop2); outline:3px solid var(--pop);}
+  .add{background:var(--green); color:#fff; font-weight:bold; padding:12px; border-radius:12px; width:100%; font-size:17px;}
+  .note{font-size:13px; color:#8b8073; line-height:1.6;}
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#3b3226; color:#fff;
+    padding:12px 22px; border-radius:999px; font-size:16px; opacity:0; pointer-events:none; transition:.3s; z-index:99;
+  }
+  .toast.show{opacity:1;}
+  .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50;}
+  .confetti i{position:absolute; font-size:26px; animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg); opacity:0;}}
+</style>
+</head>
+<body>
+
+<!-- ========== ホーム ========== -->
+<section id="s-home" class="screen active">
+  <div class="topbar">
+    <div class="ticket">🎟️ <span id="ticketCount">0</span></div>
+    <button class="icon-btn" onclick="go('settings')" aria-label="せってい">⚙️</button>
+  </div>
+  <h1>🎮 あそんで どうが 📺</h1>
+  <p class="hint">ゲームを クリアすると どうがが 1ぽん みられるよ！</p>
+  <div class="game-grid">
+    <button class="game-card c1" onclick="startGame('memory')"><span class="emo">🃏</span>しんけいすいじゃく</button>
+    <button class="game-card c2" onclick="startGame('math')"><span class="emo">🔢</span>かんたん けいさん</button>
+    <button class="game-card c3" onclick="startGame('mole')"><span class="emo">🔨</span>もぐらたたき</button>
+    <button class="game-card c4" onclick="startGame('shape')"><span class="emo">🔷</span>かたち・いろ あわせ</button>
+  </div>
+  <button class="big-btn" onclick="startGame(randomGame())">🎲 おまかせで あそぶ</button>
+  <button class="big-btn go" id="watchBtn" onclick="go('reward')" style="display:none">📺 どうがを みる</button>
+</section>
+
+<!-- ========== ゲーム ========== -->
+<section id="s-game" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="quitGame()" aria-label="もどる">←</button>
+    <div class="ticket">🎟️ <span class="ticketMirror">0</span></div>
+  </div>
+  <h2 id="gameTitle"></h2>
+  <div class="status" id="gameStatus"></div>
+  <div class="stage" id="gameStage"></div>
+</section>
+
+<!-- ========== ごほうび（ジャンル選び） ========== -->
+<section id="s-reward" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="go('home')" aria-label="もどる">←</button>
+    <div class="ticket">🎟️ <span class="ticketMirror">0</span></div>
+  </div>
+  <div class="reward-hero" id="rewardHero">🎉</div>
+  <h2 id="rewardTitle">なにを みる？</h2>
+  <p class="hint">すきな ジャンルを えらんでね</p>
+  <div class="genre-grid" id="genreGrid"></div>
+</section>
+
+<!-- ========== 動画一覧 ========== -->
+<section id="s-videos" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="go('reward')" aria-label="もどる">←</button>
+    <div class="ticket">🎟️ <span class="ticketMirror">0</span></div>
+  </div>
+  <h2 id="videosTitle"></h2>
+  <div id="videosBody"></div>
+</section>
+
+<!-- ========== 再生 ========== -->
+<section id="s-player" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="closePlayer()" aria-label="やめる">←</button>
+    <div class="ticket">🎟️ <span class="ticketMirror">0</span></div>
+  </div>
+  <div class="player-wrap" id="playerWrap"></div>
+  <button class="big-btn" onclick="closePlayer()">✅ みおわった！ もういちど あそぶ</button>
+</section>
+
+<!-- ========== 設定 ========== -->
+<section id="s-settings" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="go('home')" aria-label="もどる">←</button>
+    <strong style="font-size:20px">せってい</strong>
+    <span style="width:52px"></span>
+  </div>
+
+  <div class="panel">
+    <h3>📺 ジャンル</h3>
+    <div id="genreRows"></div>
+  </div>
+
+  <div class="panel">
+    <h3>➕ ジャンルを ついかする</h3>
+    <div class="emo-pick" id="emoPick"></div>
+    <input type="text" id="newName" placeholder="なまえ（れい：でんしゃ）" maxlength="12">
+    <input type="text" id="newQuery" placeholder="けんさくワード（れい：でんしゃ こども むけ）">
+    <button class="add" onclick="addGenre()">ついか する</button>
+    <p class="note">けんさくワードは YouTube で さがす ことばです。「こどもむけ」「キッズ」などを つけると より あんぜんです。</p>
+  </div>
+
+  <div class="panel">
+    <h3>🔑 YouTube API キー（保護者用）</h3>
+    <input type="password" id="apiKeyInput" placeholder="AIza... で はじまる キー">
+    <button class="add" onclick="saveKey()">ほぞん する</button>
+    <p class="note">
+      Google Cloud Console で「YouTube Data API v3」を有効にし、APIキーを発行して貼り付けてください。<br>
+      検索は <strong>safeSearch=strict</strong>（セーフサーチ最強）＋ 埋め込み再生のみで実行されます。キーはこのブラウザ内にのみ保存され、外部には送信されません。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h3>🎟️ チケット</h3>
+    <div class="row"><span class="g-name">いまの まいすう</span><strong style="font-size:20px" class="ticketMirror">0</strong></div>
+    <button class="add" style="background:#9aa7b0" onclick="setTickets(0)">0まいに もどす</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   じょうたい（保存データ）
+   ========================================================= */
+const STORE = 'asobi_douga_v1';
+const DEFAULT_GENRES = [
+  {id:'g1', emo:'🚃', name:'でんしゃ',   q:'でんしゃ こどもむけ'},
+  {id:'g2', emo:'🦁', name:'どうぶつ',   q:'どうぶつ こどもむけ 動画'},
+  {id:'g3', emo:'🦖', name:'きょうりゅう', q:'きょうりゅう こどもむけ'},
+  {id:'g4', emo:'🎵', name:'うた',       q:'こどものうた 手あそび'},
+  {id:'g5', emo:'✂️', name:'こうさく',    q:'おりがみ こうさく こどもむけ'},
+  {id:'g6', emo:'🚗', name:'はたらくくるま', q:'はたらくくるま こどもむけ'}
+];
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE);
+    if(raw){
+      const s = JSON.parse(raw);
+      return {tickets:s.tickets||0, genres:Array.isArray(s.genres)?s.genres:DEFAULT_GENRES.slice(), apiKey:s.apiKey||''};
+    }
+  }catch(e){}
+  return {tickets:0, genres:DEFAULT_GENRES.slice(), apiKey:''};
+}
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+function setTickets(n){ state.tickets = Math.max(0,n); save(); paintTickets(); }
+function paintTickets(){
+  document.getElementById('ticketCount').textContent = state.tickets;
+  document.querySelectorAll('.ticketMirror').forEach(el=>el.textContent = state.tickets);
+  document.getElementById('watchBtn').style.display = state.tickets>0 ? 'block' : 'none';
+}
+
+/* =========================================================
+   がめん きりかえ
+   ========================================================= */
+let current = 'home';
+function go(name){
+  if(current==='game' && name!=='game') stopAllTimers();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  current = name;
+  window.scrollTo(0,0);
+  if(name==='reward') renderGenreGrid();
+  if(name==='settings') renderSettings();
+  paintTickets();
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* =========================================================
+   おと（かんたんな ビープ）
+   ========================================================= */
+let actx=null;
+function beep(freq, dur, type){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type=type||'sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(.18, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+const sOk    = ()=>beep(880,.15,'triangle');
+const sNg    = ()=>beep(180,.22,'sawtooth');
+const sClear = ()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.22,'triangle'), i*130));};
+
+/* =========================================================
+   ゲーム きょうつう
+   ========================================================= */
+const GAMES = {
+  memory:{title:'🃏 おなじ えを さがそう', init:initMemory},
+  math:  {title:'🔢 かんたん けいさん',     init:initMath},
+  mole:  {title:'🔨 もぐらたたき',          init:initMole},
+  shape: {title:'🔷 かたち・いろ あわせ',    title2:true, init:initShape}
+};
+let timers = [];
+function later(fn,ms){ const id=setTimeout(fn,ms); timers.push(id); return id; }
+function every(fn,ms){ const id=setInterval(fn,ms); timers.push(id); return id; }
+function stopAllTimers(){ timers.forEach(id=>{clearTimeout(id); clearInterval(id);}); timers=[]; }
+function randomGame(){ const k=Object.keys(GAMES); return k[Math.floor(Math.random()*k.length)]; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function rnd(n){ return Math.floor(Math.random()*n); }
+
+const stage  = ()=>document.getElementById('gameStage');
+const statusEl = ()=>document.getElementById('gameStatus');
+
+let currentKey='memory';
+let finished=false;
+function startGame(key){
+  stopAllTimers();
+  currentKey=key; finished=false;
+  const g = GAMES[key];
+  document.getElementById('gameTitle').textContent = g.title;
+  statusEl().innerHTML=''; stage().innerHTML='';
+  go('game');
+  g.init();
+}
+function quitGame(){ stopAllTimers(); go('home'); }
+
+function clearGame(){
+  if(finished) return; finished=true;
+  stopAllTimers();
+  sClear(); confetti();
+  setTickets(state.tickets + 1);
+  stage().innerHTML =
+    '<div class="reward-hero">🎉</div>'+
+    '<h2>クリア！ チケットを 1まい ゲット！</h2>'+
+    '<button class="big-btn go" onclick="go(\'reward\')">📺 どうがを みる</button>'+
+    '<button class="big-btn" onclick="startGame(\''+currentKey+'\')">🔁 もういちど</button>'+
+    '<button class="big-btn sub" onclick="go(\'home\')">🏠 ほかの ゲーム</button>';
+  statusEl().innerHTML='';
+}
+function failGame(msg){
+  if(finished) return; finished=true;
+  stopAllTimers();
+  sNg();
+  stage().innerHTML =
+    '<div class="reward-hero">😅</div>'+
+    '<h2>'+msg+'</h2>'+
+    '<button class="big-btn" onclick="startGame(\''+currentKey+'\')">🔁 もういちど チャレンジ</button>'+
+    '<button class="big-btn sub" onclick="go(\'home\')">🏠 ほかの ゲーム</button>';
+  statusEl().innerHTML='';
+}
+function confetti(){
+  const box=document.createElement('div'); box.className='confetti';
+  const emo=['🎉','⭐','🌟','🎊','✨','🍭','🎈'];
+  for(let i=0;i<28;i++){
+    const s=document.createElement('i');
+    s.textContent=emo[rnd(emo.length)];
+    s.style.left=Math.random()*100+'vw';
+    s.style.top='-40px';
+    s.style.animationDuration=(1.6+Math.random()*1.4)+'s';
+    s.style.animationDelay=(Math.random()*.6)+'s';
+    box.appendChild(s);
+  }
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(),3600);
+}
+
+/* =========================================================
+   ゲーム1：しんけいすいじゃく
+   ========================================================= */
+function initMemory(){
+  const faces=shuffle(['🐶','🐱','🐰','🐸','🐼','🦊','🐷','🐵']).slice(0,6);
+  const deck=shuffle(faces.concat(faces));
+  let open=[], done=0, tries=0, lock=false;
+  statusEl().innerHTML='<span>ペア <b id="mPair">0</b>/6</span><span>めくった <b id="mTry">0</b>かい</span>';
+  const grid=document.createElement('div'); grid.id='memGrid';
+  deck.forEach((f,i)=>{
+    const b=document.createElement('button');
+    b.className='mcard'; b.textContent=f; b.dataset.f=f;
+    b.onclick=()=>flip(b);
+    grid.appendChild(b);
+  });
+  stage().appendChild(grid);
+
+  function flip(b){
+    if(lock || b.classList.contains('open') || b.classList.contains('done')) return;
+    b.classList.add('open'); beep(660,.08); open.push(b);
+    if(open.length===2){
+      tries++; document.getElementById('mTry').textContent=tries;
+      lock=true;
+      if(open[0].dataset.f===open[1].dataset.f){
+        later(()=>{
+          open.forEach(x=>{x.classList.remove('open'); x.classList.add('done');});
+          open=[]; lock=false; done++;
+          document.getElementById('mPair').textContent=done;
+          sOk();
+          if(done===6) later(clearGame,400);
+        },420);
+      }else{
+        later(()=>{ open.forEach(x=>x.classList.remove('open')); open=[]; lock=false; },800);
+      }
+    }
+  }
+}
+
+/* =========================================================
+   ゲーム2：かんたん けいさん（5もん せいかいで クリア）
+   ========================================================= */
+function initMath(){
+  let n=0; const TOTAL=5;
+  statusEl().innerHTML='<span>もんだい <b id="qNo">1</b>/'+TOTAL+'</span>';
+  next();
+  function next(){
+    if(n>=TOTAL){ clearGame(); return; }
+    document.getElementById('qNo').textContent=n+1;
+    const plus = Math.random()<.6;
+    let a,b,ans,text;
+    if(plus){ a=1+rnd(9); b=1+rnd(10-a); ans=a+b; text=a+' + '+b+' = ?'; }
+    else    { a=2+rnd(9); b=1+rnd(a);    ans=a-b; text=a+' − '+b+' = ?'; }
+    const set=new Set([ans]);
+    while(set.size<4){ const c=ans+(rnd(7)-3); if(c>=0&&c<=20) set.add(c); }
+    const opts=shuffle([...set]);
+    stage().innerHTML='<div class="question">'+text+'</div><div class="choices" id="ch"></div>';
+    const ch=document.getElementById('ch');
+    opts.forEach(v=>{
+      const b2=document.createElement('button'); b2.className='choice'; b2.textContent=v;
+      b2.onclick=()=>{
+        if(v===ans){ b2.classList.add('right'); sOk(); n++; later(next,500); }
+        else{ b2.classList.add('wrong'); sNg(); later(()=>b2.classList.remove('wrong'),400); }
+      };
+      ch.appendChild(b2);
+    });
+  }
+}
+
+/* =========================================================
+   ゲーム3：もぐらたたき（30びょうで 10ぴき）
+   ========================================================= */
+function initMole(){
+  const GOAL=10, TIME=30;
+  let hit=0, left=TIME;
+  statusEl().innerHTML='<span>たたいた <b id="mHit">0</b>/'+GOAL+'</span><span>のこり <b id="mSec">'+TIME+'</b>びょう</span>';
+  const grid=document.createElement('div'); grid.id='moleGrid';
+  const holes=[];
+  for(let i=0;i<9;i++){
+    const h=document.createElement('button'); h.className='hole';
+    h.innerHTML='<span class="m">🐹</span>';
+    h.onclick=()=>{
+      if(!h.classList.contains('up')) return;
+      h.classList.remove('up'); h.classList.add('hit');
+      later(()=>h.classList.remove('hit'),180);
+      hit++; sOk(); document.getElementById('mHit').textContent=hit;
+      if(hit>=GOAL) later(clearGame,250);
+    };
+    holes.push(h); grid.appendChild(h);
+  }
+  stage().appendChild(grid);
+
+  every(()=>{
+    const h=holes[rnd(9)];
+    if(h.classList.contains('up')) return;
+    h.classList.add('up');
+    later(()=>h.classList.remove('up'), 750+rnd(500));
+  }, 620);
+
+  every(()=>{
+    left--; const el=document.getElementById('mSec'); if(el) el.textContent=left;
+    if(left<=0){ if(hit>=GOAL) clearGame(); else failGame('あと '+(GOAL-hit)+'ぴき だった！'); }
+  },1000);
+}
+
+/* =========================================================
+   ゲーム4：かたち・いろ あわせ（5もん）
+   ========================================================= */
+function initShape(){
+  const SHAPES=[
+    {k:'circle',   ja:'まる'},
+    {k:'square',   ja:'しかく'},
+    {k:'triangle', ja:'さんかく'},
+    {k:'star',     ja:'ほし'},
+    {k:'heart',    ja:'ハート'}
+  ];
+  const COLORS=[
+    {c:'#ff5252', ja:'あか'}, {c:'#4fc3f7', ja:'あお'},
+    {c:'#ffd23d', ja:'きいろ'}, {c:'#7ed957', ja:'みどり'},
+    {c:'#b388ff', ja:'むらさき'}
+  ];
+  function svg(shape,color){
+    const s=78;
+    const map={
+      circle:'<circle cx="39" cy="39" r="34" fill="'+color+'"/>',
+      square:'<rect x="7" y="7" width="64" height="64" rx="8" fill="'+color+'"/>',
+      triangle:'<polygon points="39,6 74,72 4,72" fill="'+color+'"/>',
+      star:'<polygon points="39,4 48,29 75,29 53,45 61,71 39,55 17,71 25,45 3,29 30,29" fill="'+color+'"/>',
+      heart:'<path d="M39 71C10 50 6 33 16 22c8-9 19-5 23 3 4-8 15-12 23-3 10 11 6 28-23 49z" fill="'+color+'"/>'
+    };
+    return '<svg class="shape" viewBox="0 0 '+s+' '+s+'">'+map[shape]+'</svg>';
+  }
+  let n=0; const TOTAL=5;
+  statusEl().innerHTML='<span>もんだい <b id="sNo">1</b>/'+TOTAL+'</span>';
+  next();
+  function next(){
+    if(n>=TOTAL){ clearGame(); return; }
+    document.getElementById('sNo').textContent=n+1;
+    const sh=SHAPES[rnd(SHAPES.length)], co=COLORS[rnd(COLORS.length)];
+    const set=[{s:sh,c:co}];
+    let guard=0;
+    while(set.length<4 && guard++<100){
+      const s2=SHAPES[rnd(SHAPES.length)], c2=COLORS[rnd(COLORS.length)];
+      if(set.some(x=>x.s.k===s2.k && x.c.c===c2.c)) continue;
+      set.push({s:s2,c:c2});
+    }
+    const opts=shuffle(set);
+    stage().innerHTML=
+      '<div style="text-align:center">'+svg(sh.k,co.c)+
+      '<div class="question" style="font-size:30px;margin:10px 0 16px">おなじ「'+co.ja+'の '+sh.ja+'」は どれ？</div></div>'+
+      '<div class="choices" id="ch2"></div>';
+    const ch=document.getElementById('ch2');
+    opts.forEach(o=>{
+      const b=document.createElement('button'); b.className='choice'; b.innerHTML=svg(o.s.k,o.c.c);
+      b.onclick=()=>{
+        if(o.s.k===sh.k && o.c.c===co.c){ b.classList.add('right'); sOk(); n++; later(next,500); }
+        else{ b.classList.add('wrong'); sNg(); later(()=>b.classList.remove('wrong'),400); }
+      };
+      ch.appendChild(b);
+    });
+  }
+}
+
+/* =========================================================
+   ごほうび：ジャンル えらび
+   ========================================================= */
+function renderGenreGrid(){
+  const grid=document.getElementById('genreGrid');
+  const title=document.getElementById('rewardTitle');
+  grid.innerHTML='';
+  if(state.tickets<=0){
+    document.getElementById('rewardHero').textContent='🎟️';
+    title.textContent='チケットが ないよ';
+    grid.innerHTML='<div class="msg" style="grid-column:1/-1">ゲームを クリアすると チケットが 1まい もらえます。<br><br>'+
+      '<button class="big-btn" onclick="go(\'home\')">🎮 ゲームで あそぶ</button></div>';
+    return;
+  }
+  document.getElementById('rewardHero').textContent='🎉';
+  title.textContent='なにを みる？';
+  if(state.genres.length===0){
+    grid.innerHTML='<div class="msg" style="grid-column:1/-1">ジャンルが ありません。⚙️ せってい から ついか してください。</div>';
+    return;
+  }
+  state.genres.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='genre-card';
+    b.innerHTML='<span class="emo">'+g.emo+'</span>'+g.name;
+    b.onclick=()=>openGenre(g);
+    grid.appendChild(b);
+  });
+}
+
+/* =========================================================
+   YouTube けんさく
+   ========================================================= */
+const cache = {};
+function openGenre(g){
+  go('videos');
+  document.getElementById('videosTitle').textContent = g.emo+' '+g.name;
+  const body=document.getElementById('videosBody');
+
+  if(!state.apiKey){
+    body.innerHTML='<div class="msg">🔑 YouTube の APIキーが せっていされていません。<br><br>'+
+      '<span class="note">保護者の方へ：⚙️ 設定 →「YouTube API キー」に Google Cloud Console で発行したキーを保存すると、動画の検索・再生ができます。</span><br>'+
+      '<button class="big-btn" onclick="go(\'settings\')">⚙️ せってい を ひらく</button></div>';
+    return;
+  }
+  if(cache[g.id]){ renderVideos(cache[g.id], g); return; }
+
+  body.innerHTML='<div class="spinner">⏳</div>';
+  const url='https://www.googleapis.com/youtube/v3/search'+
+    '?part=snippet&type=video&maxResults=12'+
+    '&safeSearch=strict&videoEmbeddable=true&videoSyndicated=true'+
+    '&relevanceLanguage=ja&regionCode=JP'+
+    '&q='+encodeURIComponent(g.q)+
+    '&key='+encodeURIComponent(state.apiKey);
+
+  fetch(url).then(r=>r.json()).then(data=>{
+    if(data.error){
+      body.innerHTML='<div class="msg">😢 けんさく できませんでした。<br><span class="note">'+
+        (data.error.message||'')+'</span><button class="big-btn sub" onclick="go(\'settings\')">⚙️ せってい</button></div>';
+      return;
+    }
+    const items=(data.items||[]).filter(x=>x.id&&x.id.videoId);
+    if(!items.length){ body.innerHTML='<div class="msg">どうがが みつかりませんでした。ちがう ジャンルを えらんでね。</div>'; return; }
+    cache[g.id]=items;
+    renderVideos(items, g);
+  }).catch(e=>{
+    body.innerHTML='<div class="msg">😢 インターネットに つながりませんでした。<br><span class="note">'+e+'</span></div>';
+  });
+}
+
+function renderVideos(items, g){
+  const body=document.getElementById('videosBody');
+  body.innerHTML='<p class="hint">みたい どうがを タップしてね（チケットを 1まい つかいます）</p><div class="vid-list" id="vl"></div>';
+  const vl=document.getElementById('vl');
+  items.forEach(it=>{
+    const b=document.createElement('button'); b.className='vid';
+    const th=(it.snippet.thumbnails.medium||it.snippet.thumbnails.default).url;
+    b.innerHTML='<img src="'+th+'" alt=""><div class="t">'+escapeHtml(it.snippet.title)+'</div>';
+    b.onclick=()=>playVideo(it.id.videoId);
+    vl.appendChild(b);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function playVideo(id){
+  if(state.tickets<=0){ toast('チケットが ないよ！'); go('home'); return; }
+  setTickets(state.tickets-1);
+  go('player');
+  document.getElementById('playerWrap').innerHTML =
+    '<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1" '+
+    'allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+}
+function closePlayer(){
+  document.getElementById('playerWrap').innerHTML='';
+  go('home');
+}
+
+/* =========================================================
+   せってい
+   ========================================================= */
+const EMOJIS=['🚃','🦁','🦖','🎵','✂️','🚗','⚽','🚀','🐟','🍰','🌈','🐛','🚒','🎨','🧸','🦄','🌊','🐘','🍓','⭐'];
+let pickedEmo='🌈';
+
+function renderSettings(){
+  const rows=document.getElementById('genreRows');
+  rows.innerHTML='';
+  if(state.genres.length===0){
+    rows.innerHTML='<p class="note">ジャンルが ありません。したから ついかしてください。</p>';
+  }
+  state.genres.forEach(g=>{
+    const d=document.createElement('div'); d.className='row';
+    d.innerHTML='<span class="g-emo">'+g.emo+'</span>'+
+      '<span class="g-name">'+escapeHtml(g.name)+'<br><span class="g-q">🔍 '+escapeHtml(g.q)+'</span></span>';
+    const del=document.createElement('button'); del.className='del'; del.textContent='さくじょ';
+    del.onclick=()=>{
+      if(confirm('「'+g.name+'」を さくじょ しますか？')){
+        state.genres=state.genres.filter(x=>x.id!==g.id); delete cache[g.id]; save(); renderSettings(); toast('さくじょ しました');
+      }
+    };
+    d.appendChild(del); rows.appendChild(d);
+  });
+
+  const ep=document.getElementById('emoPick');
+  if(!ep.dataset.built){
+    EMOJIS.forEach(e=>{
+      const b=document.createElement('button'); b.textContent=e;
+      b.onclick=()=>{ pickedEmo=e; [...ep.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); };
+      ep.appendChild(b);
+    });
+    ep.dataset.built='1';
+    ep.children[10].classList.add('sel');
+  }
+  document.getElementById('apiKeyInput').value = state.apiKey || '';
+}
+
+function addGenre(){
+  const name=document.getElementById('newName').value.trim();
+  let q=document.getElementById('newQuery').value.trim();
+  if(!name){ toast('なまえを いれてね'); return; }
+  if(!q) q = name+' こどもむけ';
+  state.genres.push({id:'g'+Date.now(), emo:pickedEmo, name, q});
+  save();
+  document.getElementById('newName').value='';
+  document.getElementById('newQuery').value='';
+  renderSettings(); toast('ついか しました！');
+}
+
+function saveKey(){
+  state.apiKey=document.getElementById('apiKeyInput').value.trim();
+  save();
+  for(const k in cache) delete cache[k];
+  toast(state.apiKey ? 'キーを ほぞん しました' : 'キーを けしました');
+}
+
+/* =========================================================
+   きどう
+   ========================================================= */
+paintTickets();
+document.addEventListener('touchstart',()=>{},{passive:true});
+</script>
+</body>
+</html>
