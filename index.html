@@ -188,8 +188,12 @@
   .vid-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); grid-gap:12px; gap:12px;}
   .vid{background:var(--white); border:3px solid #fff; border-radius:20px; overflow:hidden;
     box-shadow:var(--sh-soft); text-align:left; padding:0; display:block; width:100%;}
-  .vid .thumb{position:relative; width:100%; height:0; padding-bottom:56.25%; background:#f4e9f5; overflow:hidden;}
-  .vid .thumb img{position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block;}
+  .vid .thumb{display:block; position:relative; width:100%; height:0; padding-bottom:56.25%;
+    background:#f4e9f5; overflow:hidden;}
+  .vid .thumb img{position:absolute; top:0; left:0; width:100%; height:100%;
+    object-fit:cover; -o-object-fit:cover; display:block; border:0;}
+  .vid .thumb .ph{position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center; font-size:30px;}
   .vid .t{padding:8px 10px 11px; font-size:14px; line-height:1.35; font-weight:bold; color:var(--ink);}
   .player-wrap{position:relative; width:100%; height:0; padding-bottom:56.25%; background:#000;
     border-radius:22px; overflow:hidden; border:4px solid #fff; box-shadow:var(--sh-soft);}
@@ -1013,8 +1017,14 @@ function renderVideos(items){
   const vl=document.getElementById('vl');
   items.forEach(function(it){
     const b=document.createElement('button'); b.className='vid';
-    const th=(it.snippet.thumbnails.medium||it.snippet.thumbnails.default).url;
-    b.innerHTML='<span class="thumb"><img src="'+th+'" alt=""></span><div class="t">'+escapeHtml(it.snippet.title)+'</div>';
+    const tn=it.snippet.thumbnails||{};
+    const th=(tn.medium||tn.high||tn.default||{}).url ||
+             ('https://i.ytimg.com/vi/'+it.id.videoId+'/mqdefault.jpg');
+    b.innerHTML=
+      '<span class="thumb"><span class="ph">🎬</span>'+
+      '<img src="'+th+'" alt="" referrerpolicy="no-referrer" '+
+      'onerror="this.src=\'https://i.ytimg.com/vi/'+it.id.videoId+'/hqdefault.jpg\'; this.onerror=null;"></span>'+
+      '<div class="t">'+escapeHtml(it.snippet.title)+'</div>';
     b.onclick=function(){ playVideo(it.id.videoId); };
     vl.appendChild(b);
   });
