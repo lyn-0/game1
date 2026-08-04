@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#ffd9ec">
+<meta name="color-scheme" content="light only">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>ゆめかわ あそびランド</title>
 <style>
   :root{
@@ -17,6 +20,7 @@
     --sh-soft:0 8px 22px rgba(190,140,220,.22);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{color-scheme:light only;}
   html,body{height:100%;}
   body{
     margin:0;
@@ -26,12 +30,24 @@
     background:linear-gradient(172deg,#ffe6f4 0%,#f6e9ff 45%,#e4f8ff 100%);
     background-attachment:fixed;
     overflow-x:hidden;
+    /* 日本語の へんな おりかえしを ふせぐ */
+    word-break:keep-all; overflow-wrap:normal; line-break:strict;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
   }
   #sky{position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:0; overflow:hidden;}
   #sky i{position:absolute; opacity:.5; animation:float linear infinite;}
   @keyframes float{0%{transform:translateY(12vh) rotate(0deg);}100%{transform:translateY(-112vh) rotate(240deg);}}
 
-  button{font-family:inherit; cursor:pointer; border:none;}
+  /* iOS Safari が ボタン文字を あお色にするのを ふせぐ */
+  button, input, select, textarea{
+    font-family:inherit; color:var(--ink); -webkit-text-fill-color:currentColor;
+  }
+  button{
+    cursor:pointer; border:none; background:none;
+    -webkit-appearance:none; appearance:none; background-clip:padding-box;
+    word-break:keep-all; overflow-wrap:normal;
+  }
+  a{color:var(--pink-d);}
   .screen{position:relative; z-index:1; display:none; min-height:100vh; padding:14px 16px 48px; max-width:900px; margin:0 auto;}
   .screen.active{display:block; animation:fade .28s ease;}
   @keyframes fade{from{opacity:0; transform:translateY(10px);}to{opacity:1;transform:none;}}
@@ -54,6 +70,7 @@
     background:var(--white); border:3px solid var(--lav); border-radius:999px;
     width:54px; height:54px; font-size:24px; box-shadow:0 5px 0 rgba(169,140,255,.32);
     display:flex; align-items:center; justify-content:center; flex:none;
+    color:var(--lav-d); -webkit-text-fill-color:var(--lav-d); font-weight:bold;
   }
   .icon-btn:active,.big-btn:active,.game-card:active,.genre-card:active,.choice:active{
     transform:translateY(3px); box-shadow:0 2px 0 rgba(255,127,184,.3);
@@ -79,14 +96,18 @@
   /* ---------- ホーム ---------- */
   .game-grid{display:grid; grid-template-columns:repeat(2,1fr); grid-gap:12px; gap:12px; margin-top:10px;}
   .game-card{
-    background:var(--white); border:3px solid #fff; border-radius:26px; padding:14px 6px 15px;
-    text-align:center; box-shadow:var(--sh-soft); font-size:17px; font-weight:bold; line-height:1.35;
+    background:var(--white); border:3px solid #fff; border-radius:26px; padding:14px 4px 15px;
+    text-align:center; box-shadow:var(--sh-soft); font-weight:bold; line-height:1.3;
     position:relative; overflow:hidden;
+    color:var(--ink); -webkit-text-fill-color:var(--ink);
   }
   .game-card:after{content:""; position:absolute; top:-30px; right:-30px; width:70px; height:70px;
     border-radius:50%; background:rgba(255,255,255,.6);}
-  .game-card .emo{display:block; font-size:44px; margin-bottom:4px; line-height:1;}
-  .game-card .tag{display:block; font-size:11px; color:#b393ab; font-weight:normal; margin-top:3px;}
+  .game-card .emo{display:block; font-size:42px; margin-bottom:4px; line-height:1;}
+  /* 1行ずつ かたまりで 表示（へんな おりかえし ぼうし） */
+  .game-card .n{display:block; white-space:nowrap; font-size:min(4.4vw,17px); line-height:1.35;}
+  .game-card .tag{display:block; white-space:nowrap; font-size:min(3vw,11px);
+    color:#b393ab; -webkit-text-fill-color:#b393ab; font-weight:normal; margin-top:4px;}
   .game-card.c1{background:linear-gradient(170deg,#fff0f7,#ffdcee);}
   .game-card.c2{background:linear-gradient(170deg,#f6f0ff,#e6dcff);}
   .game-card.c3{background:linear-gradient(170deg,#eefcf7,#d6f5ea);}
@@ -111,8 +132,10 @@
   }
   .mcard .f,.mcard .b{position:absolute; top:0; left:0; right:0; bottom:0;
     display:flex; align-items:center; justify-content:center; line-height:1;}
-  .mcard .f{font-size:min(9vw,34px); opacity:0; transition:opacity .14s;}
-  .mcard .b{font-size:min(7vw,26px); color:rgba(255,255,255,.95);}
+  .mcard .f{font-size:min(9vw,34px); opacity:0; transition:opacity .14s;
+    color:var(--ink); -webkit-text-fill-color:var(--ink);}
+  .mcard .b{font-size:min(7vw,26px); color:rgba(255,255,255,.95);
+    -webkit-text-fill-color:rgba(255,255,255,.95);}
   .mcard.open .f,.mcard.done .f{opacity:1;}
   .mcard.open .b,.mcard.done .b{opacity:0;}
   .mcard.open{background:#fff;}
@@ -252,12 +275,12 @@
   <p class="lvtext" id="lvText"></p>
   <p class="hint">3ラウンド ぜんぶ クリアすると 💖が 1こ！<br>💖1こで どうがが 1ぽん みられるよ ♪</p>
   <div class="game-grid">
-    <button class="game-card c1" onclick="startGame('memory')"><span class="emo">🍰</span>スイーツ めくりっこ<span class="tag">きおくりょく</span></button>
-    <button class="game-card c2" onclick="startGame('math')"><span class="emo">🍓</span>いちご けいさん<span class="tag">かず・けいさん</span></button>
-    <button class="game-card c5" onclick="startGame('seq')"><span class="emo">🎹</span>じゅんばん おぼえ<span class="tag">あたまの たいそう</span></button>
-    <button class="game-card c6" onclick="startGame('odd')"><span class="emo">🔍</span>なかまはずれ さがし<span class="tag">かんがえる</span></button>
-    <button class="game-card c3" onclick="startGame('mole')"><span class="emo">🐰</span>うさぎさん なでなで<span class="tag">はんしゃしんけい</span></button>
-    <button class="game-card c4" onclick="startGame('shape')"><span class="emo">🌸</span>かたち・いろ あわせ<span class="tag">かんさつりょく</span></button>
+    <button class="game-card c1" onclick="startGame('memory')"><span class="emo">🍰</span><span class="n">スイーツ</span><span class="n">めくりっこ</span><span class="tag">きおくりょく</span></button>
+    <button class="game-card c2" onclick="startGame('math')"><span class="emo">🍓</span><span class="n">いちご</span><span class="n">けいさん</span><span class="tag">かず・けいさん</span></button>
+    <button class="game-card c5" onclick="startGame('seq')"><span class="emo">🎹</span><span class="n">じゅんばん</span><span class="n">おぼえ</span><span class="tag">あたまの たいそう</span></button>
+    <button class="game-card c6" onclick="startGame('odd')"><span class="emo">🔍</span><span class="n">なかまはずれ</span><span class="n">さがし</span><span class="tag">かんがえる</span></button>
+    <button class="game-card c3" onclick="startGame('mole')"><span class="emo">🐰</span><span class="n">うさぎさん</span><span class="n">なでなで</span><span class="tag">はんしゃしんけい</span></button>
+    <button class="game-card c4" onclick="startGame('shape')"><span class="emo">🌸</span><span class="n">かたち・いろ</span><span class="n">あわせ</span><span class="tag">かんさつりょく</span></button>
   </div>
   <button class="big-btn" onclick="startGame(randomGame())">🎀 おまかせで あそぶ</button>
   <button class="big-btn go" id="watchBtn" onclick="go('reward')" style="display:none">📺 どうがを みる</button>
